@@ -50,7 +50,7 @@ app.post('/car', async(req, res)=>{
         console.log('An identity for the user appUser does not exist in the wallet');
         console.log('Run the registerUser.js application before retrying');
 
-        res.status(401).sendFile(__dirname+'uauth.html');
+        res.status(401).sendFile(__dirname+'/views/uauth.html');
         return;
     }
 
@@ -91,7 +91,7 @@ app.get('/car', async(req, res)=>{
         console.log('An identity for the user appUser does not exist in the wallet');
         console.log('Run the registerUser.js application before retrying');
 
-        res.status(401).sendFile(__dirname+'uauth.html');
+        res.status(401).sendFile(__dirname+'/views/uauth.html');
         return;
     }
     // GW -> CH -> CC
