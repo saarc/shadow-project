@@ -62,19 +62,64 @@ app.post('/car', async(req, res)=>{
     const contract = network.getContract('fabcar');
 
     await contract.submitTransaction('createCar', carid, maker, model, color, owner);
-    console.log('Transaction has been sumitted');
+    console.log('Transaction has been submitted');
     await gateway.disconnect();
 
     // submit Transaction
     const resultPath = path.join(process.cwd(), '/views/result.html');
     var resultHTML = fs.readFileSync(resultPath, 'utf8');
-    resultHTML = resultHTML.replace("<div></div>", "<div><p>Transaction has been sumitted</p></div>")
+    resultHTML = resultHTML.replace("<div></div>", "<div><p>Transaction has been submitted</p></div>")
     // result to CLIENT
     res.status(200).send(resultHTML)
     
 });
 
 // /car GET
+app.get('/car', async(req, res)=>{
+    
+    //const carid = req.body.carid;
+    const carid = req.query.carid;
+    
+    console.log('/car-get-'+carid)
+    
+    // 인증서 확인
+    const walletPath = path.join(process.cwd(), 'wallet');
+    
+    const wallet = await Wallets.newFileSystemWallet(walletPath);
+
+    console.log(`Wallet path: ${walletPath}`);
+
+    const identity = await wallet.get('appUser');
+
+    if(!identity) {
+        console.log('An identity for the user appUser does not exist in the wallet');
+        console.log('Run the registerUser.js application before retrying');
+
+        res.status(401).sendFile(__dirname+'uauth.html');
+        return;
+    }
+
+    // GW -> CH -> CC
+    const gateway = new Gateway();
+    await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+    const network = await gateway.getNetwork('mychannel');
+    const contract = network.getContract('fabcar');
+
+    const result = await contract.submitTransaction('queryCar', carid);
+    console.log(`Transaction has been evaluated, result is: ${result.toString()}`);
+    await gateway.disconnect();
+
+    // submit Transaction
+    const resultPath = path.join(process.cwd(), '/views/result.html');
+    var resultHTML = fs.readFileSync(resultPath, 'utf8');
+    //resultHTML = resultHTML.replace("<div></div>", "<div><p>Transaction has been sumitted</p></div>")
+    resultHTML = resultHTML.replace("<div></div>", `<div><p>Transaction has been evaluated, result is: ${result.toString()}</p></div>`)
+    
+    // result to CLIENT
+    res.status(200).send(resultHTML)
+    
+});
 
 // 서버시작
 app.listen(PORT, HOST);
